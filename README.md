@@ -1,6 +1,6 @@
 # Luminescence Network Sniffer
 
-> Rogue AP + HTTP Traffic Sniffer — Educational cybersecurity lab tool
+> Rogue AP + HTTP Traffic Sniffer — Educational cybersecurity lab tool.
 
 **Author:** Bangkit Eldhianpranata ([0xnhsec](https://github.com/0xnhsec))
 
