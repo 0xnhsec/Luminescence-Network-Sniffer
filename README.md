@@ -3,8 +3,11 @@
 > Rogue AP + HTTP Traffic Sniffer — Educational cybersecurity lab tool
 
 **Author:** Bangkit Eldhianpranata ([0xnhsec](https://github.com/0xnhsec))
+
 **Hardware:** ESP32 DevKit V1
+
 **License:** GPL-3.0
+
 **Dependencies:** None — uses only built-in ESP32 core libraries
 
 ## What It Does
@@ -152,7 +155,7 @@ esp32-netcapture-lab/
 └── README.md
 ```
 
-## Phase 5 Features
+## Features ( EDUCATIONAL SECUIRTY PURPOSE ONLY )
 
 - **WiFi Bridge Mode** — ESP32 runs as AP+STA simultaneously (`WIFI_AP_STA`)
 - **NAPT / Internet Access** — `ip_napt_enable()` makes AP clients route through the upstream WiFi; victims get real internet (less suspicious)
@@ -161,9 +164,6 @@ esp32-netcapture-lab/
 - **Dashboard Bridge Widget** — Stat card shows Bridge UP/DOWN + STA IP in real time; `bridge_up` / `bridge_down` events appear in the live feed
 - **Graceful Degradation** — Set `BRIDGE_MODE 0` in `config.h` to revert to AP-only (Phase 4 behaviour) without touching any other code
 - **Requires** ESP32 Arduino Core ≥ 3.x (uses `esp_netif_napt_enable()` from IDF 5 — tested on 3.3.8)
-
-## Phase 4 Features
-
 - **Live Dashboard** — Real-time web UI at `http://192.168.4.1/dashboard`
 - **Event Ring Buffer** — Last 50 events (connects, requests, captures) in RAM
 - **Merged JSON API** — `/api/poll?since=<id>` returns `{stats, events}` in one request
@@ -177,13 +177,8 @@ esp32-netcapture-lab/
 > endpoint + adaptive delay + visibility pause keeps the load on ESP32
 > proportional to actual usage — idle tab = zero traffic.
 
-## Phase 3 Features
-
 - **DNS Captive Portal** — All domains resolve to `192.168.4.1`
 - **Auto Popup** — Android, iOS, Windows, Firefox portal probes all trigger the "Sign in to network" popup on connect
-
-## Phase 2 Features
-
 - **SPIFFS** — HTML/CSS served from flash storage, editable without recompile
 - **UA Parsing** — Detects OS (Android 14), device (Samsung A04s), browser (Chrome 136)
 - **Full Header Logging** — User-Agent, Referer, Content-Type, Accept-Language, Cookie
@@ -192,11 +187,5 @@ esp32-netcapture-lab/
 - **Email Field** — Added to biodata form
 - **Fallback HTML** — Works even if SPIFFS is empty
 
-## Phases
 
-- [x] Phase 1 — MVP: AP + Login Page + Serial Capture
-- [x] Phase 2 — SPIFFS + UA Parsing + Enhanced Logging
-- [x] Phase 3 — Captive Portal (auto popup)
-- [x] Phase 4 — Live Web Dashboard (polling JSON API, adaptive)
-- [x] Phase 5 — WiFi Bridge Mode (AP+STA+NAPT)
 
