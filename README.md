@@ -27,11 +27,11 @@ timestamps, and request statistics.
 Edit **`config.h`** and set the upstream (real) WiFi credentials:
 
 ```c
-#define STA_SSID  "NamaWiFiRouterKamu"   // ← bukan LabTestAP!
+#define STA_SSID  "NamaWiFiRouterKamu"   // ← bukan Luminescence!
 #define STA_PASS  "PasswordRouterKamu"
 ```
 
-> ⚠ Jangan isi `STA_SSID` dengan `"LabTestAP"` — itu SSID AP kamu sendiri.
+> ⚠ Jangan isi `STA_SSID` dengan `"Luminescence"` — itu SSID AP kamu sendiri.
 > ESP32 akan mencoba connect ke dirinya sendiri dan bridge tidak akan berjalan.
 > Set `BRIDGE_MODE 0` di `config.h` jika tidak ingin pakai bridge.
 
@@ -115,7 +115,7 @@ Setelah itu cukup jalankan `esp-go` untuk compile, flash firmware, flash SPIFFS,
 ## Test
 
 1. Serial Monitor shows banner + AP info
-2. Phone → WiFi → connect **"LabTestAP"** (password: `lab12345`)
+2. Phone → WiFi → connect **"Luminescence"** (password: `Luminescence`)
 3. Browser → `http://192.168.4.1`
 4. Submit login + biodata form with **dummy data** (see SCOPE.md)
 5. Watch captured data in Serial Monitor
